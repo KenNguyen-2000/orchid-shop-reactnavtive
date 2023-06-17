@@ -1,4 +1,5 @@
 import {
+  FlatList,
   Image,
   ImageBackground,
   SafeAreaView,
@@ -7,9 +8,15 @@ import {
   StyleSheet,
   Text,
   View,
+  VirtualizedList,
   useColorScheme,
 } from 'react-native';
-import React, { useCallback, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from 'react';
 import SearchInput from '../components/SearchInput';
 import { Searchbar } from 'react-native-paper';
 import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
@@ -17,8 +24,11 @@ import flower_bg from '../../assets/flower_bg.png';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import OrchidCard from '../components/OrchidCard';
+import datas from '../../src/shared/data.json';
+import { useIsFocused } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const HomeScreen = () => {
+const HomeScreen = ({ route, navigation }) => {
   const [fontsLoaded] = useFonts({
     'Archivo-Black': require('../../assets/fonts/ArchivoBlack-Regular.ttf'),
     Montserrat: require('../../assets/fonts/Montserrat/Montserrat-Regular.ttf'),
@@ -29,10 +39,26 @@ const HomeScreen = () => {
     fallbackSourceColor: '#3E8260',
     sourceColor: '#3c39df',
   });
+  const isFocused = useIsFocused();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [favourites, setFavourites] = useState([]);
 
   const onChangeSearch = (query) => setSearchQuery(query);
+
+  useEffect(() => {
+    const getFavourites = async () => {
+      const datas = JSON.parse(await AsyncStorage.getItem('favourites'));
+      if (datas !== null) setFavourites(datas);
+    };
+    if (isFocused) getFavourites();
+  }, [isFocused]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, []);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -52,7 +78,11 @@ const HomeScreen = () => {
       }}
       onLayout={onLayoutRootView}
     >
-      <ScrollView>
+      <View
+        style={{
+          paddingBottom: 16,
+        }}
+      >
         <Searchbar
           placeholder='Search'
           onChangeText={onChangeSearch}
@@ -90,13 +120,43 @@ const HomeScreen = () => {
         </ImageBackground>
         <View
           style={{
-            marginTop: 20,
-            paddingVertical: 20,
+            marginVertical: 12,
+            display: 'flex',
+            flexWrap: 'wrap',
+            flexDirection: 'row',
+            gap: 10,
+            width: '100%',
+            justifyContent: 'space-between',
           }}
         >
-          <OrchidCard />
+          <FlatList
+            data={datas.orchids}
+            numColumns={2}
+            horizontal={false}
+            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+            columnWrapperStyle={{
+              justifyContent: 'space-between',
+            }}
+            renderItem={({ item }) => (
+              <OrchidCard
+                orchid={item}
+                favourites={favourites}
+                setFavourites={setFavourites}
+              />
+            )}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={true}
+          />
+          {/* {datas.orchids
+            ?.filter((orchid) =>
+              orchid.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((orchid, index) => (
+              <OrchidCard key={orchid.id} orchid={orchid} />
+            ))} */}
         </View>
-      </ScrollView>
+        <View style={{ height: 20 }}></View>
+      </View>
       <StatusBar animated={true} backgroundColor={'#7f7f7f77'} />
     </SafeAreaView>
   );

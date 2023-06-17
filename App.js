@@ -4,10 +4,10 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import {
   HomeScreen,
-  LoginScreen,
   OrchidDetailScreen,
   OrchidListScreen,
 } from './src/screens';
+import BottomNavbar from './src/components/BottomNavbar';
 
 const Stack = createNativeStackNavigator();
 
@@ -15,10 +15,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name='Login' component={LoginScreen} />
-        <Stack.Screen name='Home' component={HomeScreen} />
-        <Stack.Screen name='OrchidList' component={OrchidListScreen} />
-        <Stack.Screen name='OrchidDetail' component={OrchidDetailScreen} />
+        <Stack.Screen name='index' component={BottomNavbar} />
       </Stack.Navigator>
     </NavigationContainer>
   );
