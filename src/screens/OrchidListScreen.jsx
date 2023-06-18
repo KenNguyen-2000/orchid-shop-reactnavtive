@@ -1,4 +1,5 @@
 import {
+  Alert,
   FlatList,
   ImageBackground,
   SafeAreaView,
@@ -11,7 +12,12 @@ import {
 } from 'react-native';
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
-import { Searchbar } from 'react-native-paper';
+import {
+  ActivityIndicator,
+  IconButton,
+  MD3Colors,
+  Searchbar,
+} from 'react-native-paper';
 import OrchidCard from '../components/OrchidCard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
@@ -26,13 +32,40 @@ const OrchidListScreen = ({ navigation }) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [favourites, setFavourites] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const onChangeSearch = (query) => setSearchQuery(query);
 
+  const handleDeleteAll = async () => {
+    setFavourites([]);
+    await AsyncStorage.setItem('favourites', JSON.stringify([]));
+  };
+
+  const showAlertDeleteAll = () => {
+    Alert.alert(
+      'Delete all favourite orchids',
+      'Are you sure? This action cannot revert!',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Confirm',
+          onPress: () => handleDeleteAll(),
+          style: 'default',
+        },
+      ]
+    );
+  };
+
   useEffect(() => {
     const getFavourites = async () => {
+      setLoading(true);
       const datas = JSON.parse(await AsyncStorage.getItem('favourites'));
       if (datas !== null) setFavourites(datas);
+      setLoading(false);
     };
     if (isFocused) getFavourites();
   }, [isFocused]);
@@ -50,51 +83,77 @@ const OrchidListScreen = ({ navigation }) => {
         backgroundColor: theme[colorScheme].background,
       }}
     >
-      <View
-        style={{
-          paddingBottom: 16,
-        }}
-      >
-        <Searchbar
-          placeholder='Search'
-          onChangeText={onChangeSearch}
-          value={searchQuery}
-          style={styles.searchBar}
-          elevation={1}
-        />
-        <View
-          style={{
-            marginVertical: 12,
-            display: 'flex',
-            flexWrap: 'wrap',
-            flexDirection: 'row',
-            gap: 10,
-            width: '100%',
-            justifyContent: 'space-between',
-          }}
-        >
-          <FlatList
-            data={favourites}
-            numColumns={2}
-            horizontal={false}
-            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-            columnWrapperStyle={{
-              justifyContent: 'space-between',
-            }}
-            renderItem={({ item }) => (
-              <OrchidCard
-                orchid={item}
-                favourites={favourites}
-                setFavourites={setFavourites}
-              />
-            )}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={true}
+      <View style={styles.wrapper}>
+        {loading ? (
+          <ActivityIndicator
+            style={styles.loader}
+            size='large'
+            color={MD3Colors.primary50}
+            animating={true}
           />
-        </View>
-        <View style={{ height: 20 }}></View>
+        ) : (
+          <>
+            <View
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Searchbar
+                placeholder='Search'
+                onChangeText={onChangeSearch}
+                value={searchQuery}
+                style={styles.searchBar}
+                elevation={1}
+              />
+              <View
+                style={{
+                  marginTop: 12,
+                  flex: 1,
+                  flexGrow: 1,
+                }}
+              >
+                <FlatList
+                  data={favourites}
+                  numColumns={2}
+                  horizontal={false}
+                  ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                  columnWrapperStyle={{
+                    justifyContent: 'space-between',
+                  }}
+                  renderItem={({ item, index, separators }) => (
+                    <OrchidCard
+                      orchid={item}
+                      favourites={favourites}
+                      setFavourites={setFavourites}
+                      onShowUnderlay={separators.highlight}
+                      onHideUnderlay={separators.unhighlight}
+                      navigation={navigation}
+                    />
+                  )}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={true}
+                />
+              </View>
+              <View style={{ height: 20 }}></View>
+            </View>
+            <IconButton
+              icon='trash-can'
+              mode='contained'
+              iconColor={MD3Colors.error60}
+              size={32}
+              style={styles.floating__button}
+              onPress={showAlertDeleteAll}
+            />
+          </>
+        )}
       </View>
-      <StatusBar animated={true} backgroundColor={'#7f7f7f77'} />
+      <StatusBar
+        barStyle='dark-content'
+        animated={true}
+        backgroundColor={Platform.OS === 'ios' ? undefined : '#7f7f7f77'}
+      />
     </SafeAreaView>
   );
 };
@@ -104,7 +163,17 @@ export default OrchidListScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  wrapper: {
+    flex: 1,
     paddingHorizontal: 16,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  loader: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
   },
   searchBar: {
     marginVertical: 10,
@@ -135,5 +204,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontFamily: 'Montserrat',
+  },
+  floating__button: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
   },
 });

@@ -2,6 +2,7 @@ import {
   FlatList,
   Image,
   ImageBackground,
+  Platform,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -18,7 +19,7 @@ import React, {
   useState,
 } from 'react';
 import SearchInput from '../components/SearchInput';
-import { Searchbar } from 'react-native-paper';
+import { ActivityIndicator, MD3Colors, Searchbar } from 'react-native-paper';
 import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
 import flower_bg from '../../assets/flower_bg.png';
 import { useFonts } from 'expo-font';
@@ -43,13 +44,16 @@ const HomeScreen = ({ route, navigation }) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [favourites, setFavourites] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const onChangeSearch = (query) => setSearchQuery(query);
 
   useEffect(() => {
     const getFavourites = async () => {
+      setLoading(true);
       const datas = JSON.parse(await AsyncStorage.getItem('favourites'));
       if (datas !== null) setFavourites(datas);
+      setLoading(false);
     };
     if (isFocused) getFavourites();
   }, [isFocused]);
@@ -78,86 +82,90 @@ const HomeScreen = ({ route, navigation }) => {
       }}
       onLayout={onLayoutRootView}
     >
-      <View
-        style={{
-          paddingBottom: 16,
-        }}
-      >
-        <Searchbar
-          placeholder='Search'
-          onChangeText={onChangeSearch}
-          value={searchQuery}
-          style={styles.searchBar}
-          elevation={1}
-        />
-        <ImageBackground
-          source={flower_bg}
-          resizeMode='cover'
-          imageStyle={{
-            opacity: 0.7,
-          }}
-          style={{
-            ...styles.banner,
-            backgroundColor: theme[colorScheme].primary,
-          }}
-        >
-          <View style={styles.banner__heading__wrapper}>
-            <Text style={styles.banner__heading__text}>50% Off</Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              paddingLeft: 30,
-            }}
-          >
-            <Text style={styles.banner__heading__script}>
-              All orchid products
-            </Text>
-            <Text style={styles.banner__heading__script}>
-              after 9PM everyday
-            </Text>
-          </View>
-        </ImageBackground>
+      <View style={styles.wrapper}>
         <View
           style={{
-            marginVertical: 12,
+            flex: 1,
             display: 'flex',
-            flexWrap: 'wrap',
-            flexDirection: 'row',
-            gap: 10,
-            width: '100%',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
           }}
         >
-          <FlatList
-            data={datas.orchids}
-            numColumns={2}
-            horizontal={false}
-            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-            columnWrapperStyle={{
-              justifyContent: 'space-between',
+          <Searchbar
+            placeholder='Search'
+            onChangeText={onChangeSearch}
+            value={searchQuery}
+            style={styles.searchBar}
+            elevation={1}
+          />
+          <ImageBackground
+            source={flower_bg}
+            resizeMode='cover'
+            imageStyle={{
+              opacity: 0.7,
             }}
-            renderItem={({ item }) => (
-              <OrchidCard
-                orchid={item}
-                favourites={favourites}
-                setFavourites={setFavourites}
+            style={{
+              ...styles.banner,
+              backgroundColor: theme[colorScheme].primary,
+            }}
+          >
+            <View style={styles.banner__heading__wrapper}>
+              <Text style={styles.banner__heading__text}>50% Off</Text>
+            </View>
+            <View
+              style={{
+                display: 'flex',
+                paddingLeft: 30,
+              }}
+            >
+              <Text style={styles.banner__heading__script}>
+                All orchid products
+              </Text>
+              <Text style={styles.banner__heading__script}>
+                after 9PM everyday
+              </Text>
+            </View>
+          </ImageBackground>
+          <View style={styles.list__wrapper}>
+            {loading ? (
+              <ActivityIndicator
+                style={styles.loader}
+                size='large'
+                color={MD3Colors.primary50}
+                animating={true}
+              />
+            ) : (
+              <FlatList
+                data={datas.orchids}
+                numColumns={2}
+                horizontal={false}
+                ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                columnWrapperStyle={{
+                  justifyContent: 'space-between',
+                }}
+                // style={{ flex: 1 }}
+                renderItem={({ item, index, separators }) => (
+                  <OrchidCard
+                    orchid={item}
+                    favourites={favourites}
+                    setFavourites={setFavourites}
+                    onShowUnderlay={separators.highlight}
+                    onHideUnderlay={separators.unhighlight}
+                    navigation={navigation}
+                  />
+                )}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={true}
               />
             )}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={true}
-          />
-          {/* {datas.orchids
-            ?.filter((orchid) =>
-              orchid.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .map((orchid, index) => (
-              <OrchidCard key={orchid.id} orchid={orchid} />
-            ))} */}
+          </View>
+          <View style={{ height: 5 }}></View>
         </View>
-        <View style={{ height: 20 }}></View>
       </View>
-      <StatusBar animated={true} backgroundColor={'#7f7f7f77'} />
+      <StatusBar
+        barStyle='dark-content'
+        animated={true}
+        backgroundColor={Platform.OS === 'ios' ? undefined : '#7f7f7f77'}
+      />
     </SafeAreaView>
   );
 };
@@ -167,7 +175,19 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  wrapper: {
+    flex: 1,
     paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
+  list__wrapper: {
+    marginTop: 12,
+    flex: 1,
+    flexGrow: 1,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   searchBar: {
     marginVertical: 10,

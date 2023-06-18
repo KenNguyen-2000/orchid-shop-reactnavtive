@@ -1,4 +1,5 @@
 import {
+  Alert,
   Image,
   Pressable,
   StyleSheet,
@@ -6,13 +7,19 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import React from 'react';
-import { Button } from 'react-native-paper';
+import React, { useState } from 'react';
+import { Button, IconButton, MD3Colors } from 'react-native-paper';
 import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const OrchidCard = ({ orchid, favourites, setFavourites }) => {
+const OrchidCard = ({
+  orchid,
+  favourites,
+  setFavourites,
+  navigation,
+  isFavourite,
+}) => {
   const colorScheme = useColorScheme();
   const { theme } = useMaterial3Theme({
     fallbackSourceColor: '#3E8260',
@@ -22,15 +29,7 @@ const OrchidCard = ({ orchid, favourites, setFavourites }) => {
   const handleLike = async (selectedOrchid) => {
     const existing = favourites.find((item) => item.id === selectedOrchid.id);
     if (existing) {
-      setFavourites((prev) =>
-        prev.filter((item) => item.id !== selectedOrchid.id)
-      );
-      await AsyncStorage.setItem(
-        'favourites',
-        JSON.stringify(
-          favourites.filter((item) => item.id !== selectedOrchid.id)
-        )
-      );
+      handleDislike(selectedOrchid);
     } else {
       setFavourites((prev) => [...prev, selectedOrchid]);
       await AsyncStorage.setItem(
@@ -40,17 +39,54 @@ const OrchidCard = ({ orchid, favourites, setFavourites }) => {
     }
   };
 
+  const handleDislike = async (selectedOrchid) => {
+    setFavourites((prev) =>
+      prev.filter((item) => item.id !== selectedOrchid.id)
+    );
+    await AsyncStorage.setItem(
+      'favourites',
+      JSON.stringify(favourites.filter((item) => item.id !== selectedOrchid.id))
+    );
+  };
+
+  const handleShowDetail = (selctedOrchid) => {
+    navigation.navigate('detail', {
+      orchid: selctedOrchid,
+      favourites: favourites,
+    });
+  };
+
+  const showAllertDislike = (selectedOrchid) => {
+    Alert.alert(
+      'Remove from favourites',
+      'Are you sure? This action cannot revert!',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Confirm',
+          onPress: () => handleDislike(selectedOrchid),
+          style: 'default',
+        },
+      ]
+    );
+  };
+
   // console.warn(orchid.path);
 
   return (
     <View style={[styles.container, styles.shadowProp]}>
-      <View
+      <Pressable
         style={{
           width: '100%',
           height: 100,
           flexGrow: 1,
-          backgroundColor: '#333',
+          backgroundColor: '#fff',
         }}
+        onPress={handleShowDetail.bind(null, orchid)}
       >
         <Image
           style={{
@@ -62,7 +98,7 @@ const OrchidCard = ({ orchid, favourites, setFavourites }) => {
             uri: orchid.path,
           }}
         />
-      </View>
+      </Pressable>
       <View
         style={{
           display: 'flex',
@@ -102,7 +138,7 @@ const OrchidCard = ({ orchid, favourites, setFavourites }) => {
       >
         Add to basket
       </Button>
-      <Pressable
+      {/* <Pressable
         style={{
           position: 'absolute',
           top: 10,
@@ -111,7 +147,26 @@ const OrchidCard = ({ orchid, favourites, setFavourites }) => {
         onPress={handleLike.bind(null, orchid)}
       >
         <Entypo name='heart-outlined' size={24} />
-      </Pressable>
+      </Pressable> */}
+      <IconButton
+        icon={
+          favourites.find((item) => item.id === orchid.id)
+            ? 'cards-heart'
+            : 'cards-heart-outline'
+        }
+        mode='contained'
+        iconColor={MD3Colors.error40}
+        size={16}
+        onPress={
+          favourites.find((item) => item.id === orchid.id)
+            ? showAllertDislike.bind(null, orchid)
+            : handleLike.bind(null, orchid)
+        }
+        style={{
+          position: 'absolute',
+        }}
+        animated={true}
+      />
       <View
         style={{
           ...styles.discount__wrapper,
