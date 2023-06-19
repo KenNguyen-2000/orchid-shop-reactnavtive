@@ -28,6 +28,7 @@ import OrchidCard from '../components/OrchidCard';
 import datas from '../../src/shared/data.json';
 import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Categories from '../components/Categories';
 
 const HomeScreen = ({ route, navigation }) => {
   const [fontsLoaded] = useFonts({
@@ -44,15 +45,22 @@ const HomeScreen = ({ route, navigation }) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [favourites, setFavourites] = useState([]);
+  const [orchids, setOrchids] = useState(datas.orchids);
   const [loading, setLoading] = useState(false);
+  const [selectType, setSelectType] = useState(datas.categories[0]);
 
   const onChangeSearch = (query) => setSearchQuery(query);
 
   useEffect(() => {
     const getFavourites = async () => {
       setLoading(true);
-      const datas = JSON.parse(await AsyncStorage.getItem('favourites'));
-      if (datas !== null) setFavourites(datas);
+      const storeData = JSON.parse(await AsyncStorage.getItem('favourites'));
+      if (storeData !== null) setFavourites(storeData);
+      setOrchids((prev) =>
+        prev.filter((item) =>
+          selectType === 'All' ? item : item.type === selectType
+        )
+      );
       setLoading(false);
     };
     if (isFocused) getFavourites();
@@ -97,7 +105,7 @@ const HomeScreen = ({ route, navigation }) => {
             style={styles.searchBar}
             elevation={1}
           />
-          <ImageBackground
+          {/* <ImageBackground
             source={flower_bg}
             resizeMode='cover'
             imageStyle={{
@@ -124,7 +132,13 @@ const HomeScreen = ({ route, navigation }) => {
                 after 9PM everyday
               </Text>
             </View>
-          </ImageBackground>
+          </ImageBackground> */}
+          <Categories
+            setList={setOrchids}
+            list={datas.orchids}
+            selectType={selectType}
+            setSelectType={setSelectType}
+          />
           <View style={styles.list__wrapper}>
             {loading ? (
               <ActivityIndicator
@@ -135,7 +149,7 @@ const HomeScreen = ({ route, navigation }) => {
               />
             ) : (
               <FlatList
-                data={datas.orchids}
+                data={orchids.filter((item) => item.name.includes(searchQuery))}
                 numColumns={2}
                 horizontal={false}
                 ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
@@ -155,6 +169,9 @@ const HomeScreen = ({ route, navigation }) => {
                 )}
                 keyExtractor={(item) => item.id}
                 scrollEnabled={true}
+                style={{
+                  width: '100%',
+                }}
               />
             )}
           </View>

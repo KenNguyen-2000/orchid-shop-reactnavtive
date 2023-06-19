@@ -12,7 +12,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { HomeScreen, OrchidDetailScreen, OrchidListScreen } from '../screens';
 import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { IconButton } from 'react-native-paper';
+import { IconButton, MD3Colors } from 'react-native-paper';
 
 const Tab = createBottomTabNavigator();
 const OrchidStack = createNativeStackNavigator();
@@ -63,8 +63,12 @@ const BottomNavbar = ({ navigation }) => {
         name='OrchidStack'
         component={OrchidStackScreen}
         options={{
-          tabBarIcon: () => (
-            <MaterialIcons name='home' size={28} style={styles.icon} />
+          tabBarIcon: ({ focused }) => (
+            <MaterialIcons
+              name='home'
+              size={28}
+              style={{ color: focused ? '#52ebff' : '#fff' }}
+            />
           ),
         }}
       />
@@ -73,8 +77,12 @@ const BottomNavbar = ({ navigation }) => {
         name='FavourtieStack'
         component={FavouriteStackScreen}
         options={{
-          tabBarIcon: () => (
-            <Entypo name='flower' size={28} style={styles.icon} />
+          tabBarIcon: ({ focused }) => (
+            <Entypo
+              name='flower'
+              size={28}
+              style={{ color: focused ? '#52ebff' : '#fff' }}
+            />
           ),
         }}
       />

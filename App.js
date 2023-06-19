@@ -1,3 +1,5 @@
+import 'react-native-gesture-handler';
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -8,15 +10,18 @@ import {
   OrchidListScreen,
 } from './src/screens';
 import BottomNavbar from './src/components/BottomNavbar';
+import DrawerNav from './src/components/DrawerNav';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      {/* <Stack.Navigator>
         <Stack.Screen name='index' component={BottomNavbar} />
-      </Stack.Navigator>
+        <Stack.Screen name='detail' component={OrchidDetailScreen} />
+      </Stack.Navigator> */}
+      <DrawerNav />
     </NavigationContainer>
   );
 }

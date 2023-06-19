@@ -21,6 +21,7 @@ import {
 import OrchidCard from '../components/OrchidCard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
+import Categories from '../components/Categories';
 
 const OrchidListScreen = ({ navigation }) => {
   const colorScheme = useColorScheme();
@@ -107,6 +108,7 @@ const OrchidListScreen = ({ navigation }) => {
                 style={styles.searchBar}
                 elevation={1}
               />
+              {/* <Categories list={favourites} setList={setFavourites} /> */}
               <View
                 style={{
                   marginTop: 12,

@@ -136,7 +136,7 @@ const OrchidCard = ({
         style={[styles.button, { backgroundColor: theme[colorScheme].primary }]}
         mode='contained'
       >
-        Add to basket
+        {orchid.type}
       </Button>
       {/* <Pressable
         style={{
